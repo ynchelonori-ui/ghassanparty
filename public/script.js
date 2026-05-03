@@ -3,27 +3,16 @@ const socket = io();
 let roomId = "";
 let peer;
 let localStream;
-
-// اسم المستخدم
 let username = "User" + Math.floor(Math.random() * 1000);
 
 // عناصر
-const joinBtn = document.getElementById("joinBtn");
-const roomInput = document.getElementById("roomInput");
-const screenBtn = document.getElementById("screenBtn");
 const localVideo = document.getElementById("localVideo");
 const remoteVideo = document.getElementById("remoteVideo");
-const sendBtn = document.getElementById("sendBtn");
-const msgInput = document.getElementById("msgInput");
-
-// اتصال
-socket.on("connect", () => {
-  console.log("✅ connected");
-});
 
 // دخول غرفة
-joinBtn.onclick = () => {
-  roomId = roomInput.value.trim();
+function joinRoom() {
+  const input = document.getElementById("roomInput");
+  roomId = input.value.trim();
 
   if (!roomId) {
     alert("اكتب اسم الغرفة");
@@ -31,12 +20,8 @@ joinBtn.onclick = () => {
   }
 
   socket.emit("join", roomId);
-};
-
-// تأكيد دخول
-socket.on("joined", (room) => {
-  alert("دخلت الغرفة: " + room);
-});
+  alert("دخلت الغرفة: " + roomId);
+}
 
 // WebRTC
 function createPeer() {
@@ -60,8 +45,11 @@ function createPeer() {
 }
 
 // مشاركة الشاشة
-screenBtn.onclick = async () => {
-  if (!roomId) return alert("ادخل غرفة أول");
+async function startScreen() {
+  if (!roomId) {
+    alert("ادخل غرفة أول");
+    return;
+  }
 
   localStream = await navigator.mediaDevices.getDisplayMedia({
     video: true,
@@ -80,7 +68,7 @@ screenBtn.onclick = async () => {
   await peer.setLocalDescription(offer);
 
   socket.emit("offer", { roomId, offer });
-};
+}
 
 // استقبال offer
 socket.on("offer", async ({ offer }) => {
@@ -107,8 +95,10 @@ socket.on("ice", async ({ candidate }) => {
 });
 
 // 💬 إرسال رسالة
-sendBtn.onclick = () => {
-  const msg = msgInput.value.trim();
+function sendMessage() {
+  const input = document.getElementById("msgInput");
+  const msg = input.value.trim();
+
   if (!msg) return;
 
   socket.emit("chat", {
@@ -118,8 +108,8 @@ sendBtn.onclick = () => {
   });
 
   addMessage("Me", msg);
-  msgInput.value = "";
-};
+  input.value = "";
+}
 
 // 💬 استقبال رسالة
 socket.on("chat", ({ message, username }) => {
