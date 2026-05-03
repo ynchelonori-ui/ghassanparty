@@ -18,18 +18,10 @@ io.on("connection", (socket) => {
     socket.join(roomId);
 
     if (!rooms[roomId]) {
-      rooms[roomId] = { time: 0, playing: false };
+      rooms[roomId] = {};
     }
 
     socket.emit("joined", roomId);
-    socket.emit("sync", rooms[roomId]);
-  });
-
-  socket.on("play", (roomId) => socket.to(roomId).emit("play"));
-  socket.on("pause", (roomId) => socket.to(roomId).emit("pause"));
-
-  socket.on("seek", ({ roomId, time }) => {
-    socket.to(roomId).emit("seek", time);
   });
 
   // 💬 chat
