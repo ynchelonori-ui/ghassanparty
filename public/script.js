@@ -11,16 +11,31 @@ const screenBtn = document.getElementById("screenBtn");
 const localVideo = document.getElementById("localVideo");
 const remoteVideo = document.getElementById("remoteVideo");
 
-// دخول غرفة
-joinBtn.onclick = () => {
-    roomId = roomInput.value;
-    if (!roomId) return alert("اكتب اسم الغرفة");
+// اتصال
+socket.on("connect", () => {
+    console.log("✅ connected to server");
+});
 
+// 🔥 دخول الغرفة
+joinBtn.onclick = () => {
+    roomId = roomInput.value.trim();
+
+    if (!roomId) {
+        alert("اكتب اسم الغرفة");
+        return;
+    }
+
+    console.log("📩 sending join:", roomId);
     socket.emit("join", roomId);
-    console.log("Joined room:", roomId);
 };
 
-// إعداد WebRTC
+// 🔥 تأكيد الدخول (مهم جدًا)
+socket.on("joined", (room) => {
+    console.log("✅ دخلت الغرفة:", room);
+    alert("تم الدخول: " + room);
+});
+
+// إنشاء WebRTC
 function createPeer() {
     peer = new RTCPeerConnection({
         iceServers: [
@@ -28,13 +43,11 @@ function createPeer() {
         ]
     });
 
-    // استقبال فيديو الطرف الثاني
     peer.ontrack = (event) => {
         console.log("📺 Received stream");
-        remoteVideo.srcObject = event.streams[0]; // ⭐ أهم سطر
+        remoteVideo.srcObject = event.streams[0];
     };
 
-    // إرسال ICE
     peer.onicecandidate = (event) => {
         if (event.candidate) {
             socket.emit("ice", {
@@ -45,8 +58,13 @@ function createPeer() {
     };
 }
 
-// تشغيل الشير سكرين
+// 📺 مشاركة الشاشة
 screenBtn.onclick = async () => {
+    if (!roomId) {
+        alert("ادخل غرفة أول");
+        return;
+    }
+
     try {
         localStream = await navigator.mediaDevices.getDisplayMedia({
             video: true,
@@ -57,7 +75,6 @@ screenBtn.onclick = async () => {
 
         createPeer();
 
-        // إرسال الفيديو
         localStream.getTracks().forEach(track => {
             peer.addTrack(track, localStream);
         });
@@ -71,7 +88,7 @@ screenBtn.onclick = async () => {
         });
 
     } catch (err) {
-        console.error("Screen share error:", err);
+        console.error("❌ Screen share error:", err);
     }
 };
 
@@ -95,7 +112,7 @@ socket.on("answer", async ({ answer }) => {
     await peer.setRemoteDescription(new RTCSessionDescription(answer));
 });
 
-// استقبال ICE
+// ICE
 socket.on("ice", async ({ candidate }) => {
     try {
         await peer.addIceCandidate(new RTCIceCandidate(candidate));
