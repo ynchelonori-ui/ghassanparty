@@ -21,16 +21,12 @@ io.on("connection", (socket) => {
       rooms[roomId] = { time: 0, playing: false };
     }
 
+    socket.emit("joined", roomId);
     socket.emit("sync", rooms[roomId]);
   });
 
-  socket.on("play", (roomId) => {
-    socket.to(roomId).emit("play");
-  });
-
-  socket.on("pause", (roomId) => {
-    socket.to(roomId).emit("pause");
-  });
+  socket.on("play", (roomId) => socket.to(roomId).emit("play"));
+  socket.on("pause", (roomId) => socket.to(roomId).emit("pause"));
 
   socket.on("seek", ({ roomId, time }) => {
     socket.to(roomId).emit("seek", time);
@@ -38,7 +34,7 @@ io.on("connection", (socket) => {
 
   // 💬 chat
   socket.on("chat", ({ roomId, message }) => {
-    socket.to(roomId).emit("chat", message);
+    io.to(roomId).emit("chat", message);
   });
 
   // 🔥 WebRTC
@@ -52,10 +48,6 @@ io.on("connection", (socket) => {
 
   socket.on("ice", ({ roomId, candidate }) => {
     socket.to(roomId).emit("ice", { candidate });
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
   });
 });
 
