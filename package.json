@@ -1,15 +1,12 @@
 {
   "name": "ghassanparty",
   "version": "1.0.0",
-  "description": "watch party with chat and screen share",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "express": "^4.18.2",
-    "socket.io": "^4.7.5"
+    "socket.io": "^4.7.2"
   }
 }
