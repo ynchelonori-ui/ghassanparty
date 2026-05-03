@@ -3,7 +3,6 @@ const socket = io();
 let roomId;
 let peer;
 
-const video = document.getElementById("video");
 const remoteVideo = document.getElementById("remoteVideo");
 const status = document.getElementById("status");
 
@@ -27,7 +26,7 @@ function joinRoom() {
   initWebRTC();
 }
 
-// WebRTC setup
+// WebRTC
 function initWebRTC() {
   peer = new RTCPeerConnection({
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
@@ -41,20 +40,15 @@ function initWebRTC() {
 
   peer.ontrack = (event) => {
     console.log("📺 stream received");
+
     remoteVideo.srcObject = event.streams[0];
+
+    remoteVideo.muted = true;
+    remoteVideo.play().catch(err => {
+      console.log("Autoplay blocked:", err);
+    });
   };
 }
-
-// 🎥 فيديو
-video.onplay = () => socket.emit("play", roomId);
-video.onpause = () => socket.emit("pause", roomId);
-
-socket.on("play", () => video.play());
-socket.on("pause", () => video.pause());
-
-socket.on("seek", (time) => {
-  video.currentTime = time;
-});
 
 // 💬 chat
 function sendMessage() {
