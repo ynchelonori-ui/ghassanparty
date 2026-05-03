@@ -1,3 +1,5 @@
+console.log("🔥 script loaded");
+
 const socket = io();
 
 let roomId = "";
@@ -9,6 +11,11 @@ let username = "User" + Math.floor(Math.random() * 1000);
 const localVideo = document.getElementById("localVideo");
 const remoteVideo = document.getElementById("remoteVideo");
 
+// اتصال
+socket.on("connect", () => {
+  console.log("✅ connected");
+});
+
 // دخول غرفة
 function joinRoom() {
   const input = document.getElementById("roomInput");
@@ -19,9 +26,14 @@ function joinRoom() {
     return;
   }
 
+  console.log("Joining:", roomId);
   socket.emit("join", roomId);
-  alert("دخلت الغرفة: " + roomId);
 }
+
+// تأكيد
+socket.on("joined", (room) => {
+  alert("دخلت الغرفة: " + room);
+});
 
 // WebRTC
 function createPeer() {
@@ -30,16 +42,14 @@ function createPeer() {
   });
 
   peer.ontrack = (event) => {
+    console.log("📺 stream received");
     remoteVideo.srcObject = event.streams[0];
     remoteVideo.play().catch(() => {});
   };
 
   peer.onicecandidate = (event) => {
     if (event.candidate) {
-      socket.emit("ice", {
-        roomId,
-        candidate: event.candidate
-      });
+      socket.emit("ice", { roomId, candidate: event.candidate });
     }
   };
 }
@@ -94,7 +104,7 @@ socket.on("ice", async ({ candidate }) => {
   }
 });
 
-// 💬 إرسال رسالة
+// 💬 إرسال
 function sendMessage() {
   const input = document.getElementById("msgInput");
   const msg = input.value.trim();
@@ -111,12 +121,12 @@ function sendMessage() {
   input.value = "";
 }
 
-// 💬 استقبال رسالة
+// 💬 استقبال
 socket.on("chat", ({ message, username }) => {
   addMessage(username, message);
 });
 
-// عرض الرسالة
+// عرض
 function addMessage(user, msg) {
   const li = document.createElement("li");
   li.innerHTML = <b>${user}:</b> ${msg};
