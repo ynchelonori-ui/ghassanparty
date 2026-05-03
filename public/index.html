@@ -6,24 +6,25 @@
 </head>
 <body>
 
-<h2>🎬 Watch Party</h2>
+<h1>🎬 Watch Party</h1>
 
-<input id="roomInput" placeholder="Room ID">
+<input id="roomInput" placeholder="room1">
 <button onclick="joinRoom()">Join</button>
 
 <br><br>
 
-<video id="video" width="400" controls></video>
-<video id="remoteVideo" width="400" autoplay></video>
+<video id="video" controls width="500">
+  <source src="video.mp4" type="video/mp4">
+</video>
 
-<br><br>
+<h3>📺 Screen Share</h3>
+<video id="remoteVideo" autoplay playsinline width="500"></video>
+<br>
+<button onclick="startScreenShare()">Share Screen</button>
 
-<button onclick="shareScreen()">📺 Share Screen</button>
-
-<br><br>
-
+<h3>💬 Chat</h3>
 <input id="msg" placeholder="message">
-<button onclick="sendMsg()">Send</button>
+<button onclick="sendMessage()">Send</button>
 
 <ul id="chat"></ul>
 
