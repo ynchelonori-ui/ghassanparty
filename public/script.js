@@ -23,21 +23,19 @@ socket.on("connect", () => {
 
 // دخول غرفة
 joinBtn.onclick = () => {
-    roomId = roomInput.value.trim();
+  roomId = roomInput.value.trim();
 
-    if (!roomId) {
-        alert("اكتب اسم الغرفة");
-        return;
-    }
+  if (!roomId) {
+    alert("اكتب اسم الغرفة");
+    return;
+  }
 
-    console.log("📩 sending join:", roomId);
-    socket.emit("join", roomId);
+  socket.emit("join", roomId);
 };
 
-// 🔥 تأكيد الدخول (مهم جدًا)
+// تأكيد دخول
 socket.on("joined", (room) => {
-    console.log("✅ دخلت الغرفة:", room);
-    alert("تم الدخول: " + room);
+  alert("دخلت الغرفة: " + room);
 });
 
 // WebRTC
