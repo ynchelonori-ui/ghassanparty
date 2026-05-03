@@ -1,91 +1,44 @@
 const socket = io();
 
-let roomId = "";
-let localStream;
-let peer;
-
+let room = "";
 const video = document.getElementById("video");
 
-// دخول غرفة
 function joinRoom() {
-    roomId = document.getElementById("roomInput").value;
-    socket.emit("join", roomId);
+  room = document.getElementById("roomInput").value;
+  socket.emit("join", room);
 }
 
-// 🖥️ مشاركة الشاشة
-async function startScreen() {
-    localStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: true
-    });
+// استقبال حالة الفيديو عند الدخول
+socket.on("sync", (data) => {
+  video.currentTime = data.time;
+  if (data.playing) video.play();
+});
 
-    video.srcObject = localStream;
+// تحكم الفيديو
+video.onplay = () => socket.emit("play", room);
+video.onpause = () => socket.emit("pause", room);
+video.onseeked = () => {
+  socket.emit("seek", {
+    roomId: room,
+    time: video.currentTime
+  });
+};
 
-    createPeer();
-}
+// استقبال الأحداث
+socket.on("play", () => video.play());
+socket.on("pause", () => video.pause());
+socket.on("seek", (time) => {
+  video.currentTime = time;
+});
 
-// إنشاء اتصال
-function createPeer() {
-    peer = new RTCPeerConnection();
-
-    localStream.getTracks().forEach(track => {
-        peer.addTrack(track, localStream);
-    });
-
-    peer.ontrack = (event) => {
-        video.srcObject = event.streams[0];
-    };
-
-    peer.onicecandidate = (event) => {
-        if (event.candidate) {
-            socket.emit("ice", { roomId, candidate: event.candidate });
-        }
-    };
-
-    socket.on("ice", async ({ candidate }) => {
-        if (candidate) {
-            await peer.addIceCandidate(candidate);
-        }
-    });
-
-    socket.on("offer", async ({ offer }) => {
-        await peer.setRemoteDescription(offer);
-        const answer = await peer.createAnswer();
-        await peer.setLocalDescription(answer);
-        socket.emit("answer", { roomId, answer });
-    });
-
-    socket.on("answer", async ({ answer }) => {
-        await peer.setRemoteDescription(answer);
-    });
-
-    createOffer();
-}
-
-// إرسال عرض
-async function createOffer() {
-    const offer = await peer.createOffer();
-    await peer.setLocalDescription(offer);
-    socket.emit("offer", { roomId, offer });
-}
-
-// 💬 الشات (مثل ما هو)
+// شات
 function sendMsg() {
-    const input = document.getElementById("msgInput");
-    const message = input.value;
-
-    socket.emit("chat", { roomId, message });
-    addMsg("أنت: " + message);
-
-    input.value = "";
+  const msg = document.getElementById("msg").value;
+  socket.emit("chat", { roomId: room, message: msg });
 }
 
 socket.on("chat", (msg) => {
-    addMsg("الشخص: " + msg);
+  const li = document.createElement("li");
+  li.textContent = msg;
+  document.getElementById("chat").appendChild(li);
 });
-
-function addMsg(msg) {
-    const div = document.createElement("div");
-    div.textContent = msg;
-    document.getElementById("messages").appendChild(div);
-}
