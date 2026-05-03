@@ -9,24 +9,22 @@ const io = new Server(server);
 
 app.use(express.static(path.join(__dirname, "public")));
 
-let rooms = {};
-
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
+  // دخول غرفة
   socket.on("join", (roomId) => {
     socket.join(roomId);
-
-    if (!rooms[roomId]) {
-      rooms[roomId] = {};
-    }
-
+    console.log("User joined:", roomId);
     socket.emit("joined", roomId);
   });
 
-  // 💬 chat
-  socket.on("chat", ({ roomId, message }) => {
-    io.to(roomId).emit("chat", message);
+  // 💬 الشات مع اسم المستخدم
+  socket.on("chat", ({ roomId, message, username }) => {
+    io.to(roomId).emit("chat", {
+      message,
+      username
+    });
   });
 
   // 🔥 WebRTC
