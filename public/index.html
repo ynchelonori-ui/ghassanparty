@@ -1,34 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Watch Party</title>
-  <link rel="stylesheet" href="style.css">
+
+  <style>
+    body {
+      background: #111;
+      color: white;
+      text-align: center;
+      font-family: Arial;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px;
+    }
+
+    video {
+      width: 300px;
+      margin: 10px;
+      border-radius: 10px;
+      background: black;
+    }
+  </style>
 </head>
 <body>
 
 <h1>🎬 Watch Party</h1>
 
-<input id="roomInput" placeholder="room1">
-<button onclick="joinRoom()">Join</button>
+<!-- دخول الغرفة -->
+<input id="roomInput" placeholder="Room ID">
+<button id="joinBtn">Join Room</button>
 
-<p id="status"></p>
+<hr>
 
-<video id="video" controls width="500">
-  <source src="video.mp4" type="video/mp4">
-</video>
-
+<!-- الفيديو -->
 <h3>📺 Screen Share</h3>
-<video id="remoteVideo" autoplay playsinline width="500"></video>
+
+<!-- فيديوك -->
+<p>🟢 Your Screen</p>
+<video id="localVideo" autoplay muted playsinline></video>
+
+<!-- فيديو الطرف الثاني -->
+<p>🔴 Friend Screen</p>
+<video id="remoteVideo" autoplay playsinline></video>
+
 <br>
-<button onclick="startScreenShare()">Share Screen</button>
 
+<button id="screenBtn">📺 Share Screen</button>
+
+<hr>
+
+<!-- الشات -->
 <h3>💬 Chat</h3>
-<input id="msg" placeholder="message">
-<button onclick="sendMessage()">Send</button>
 
-<ul id="chat"></ul>
+<input id="msgInput" placeholder="Type message">
+<button id="sendBtn">Send</button>
 
+<ul id="chatBox"></ul>
+
+<!-- socket -->
 <script src="/socket.io/socket.io.js"></script>
+
+<!-- السكربت -->
 <script src="script.js"></script>
 
 </body>
