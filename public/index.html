@@ -31,15 +31,18 @@
 <h1>🎬 Watch Party</h1>
 
 <!-- دخول غرفة -->
-<input id="roomInput" placeholder="Room ID">
-<button onclick="joinRoom()">Join Room</button>
+<input id="roomInput" placeholder="room1">
+<button onclick="joinRoom()">Join</button>
 
 <hr>
 
-<!-- مشاركة الشاشة -->
+<!-- فيديو -->
 <h3>📺 Screen Share</h3>
 
+<p>🟢 Your Screen</p>
 <video id="localVideo" autoplay muted playsinline></video>
+
+<p>🔴 Friend Screen</p>
 <video id="remoteVideo" autoplay playsinline muted></video>
 
 <br>
@@ -47,15 +50,14 @@
 
 <hr>
 
-<!-- الشات -->
+<!-- شات -->
 <h3>💬 Chat</h3>
 
-<input id="msgInput" placeholder="Message">
+<input id="msgInput" placeholder="message">
 <button onclick="sendMessage()">Send</button>
 
 <ul id="chatBox"></ul>
 
-<!-- سكربت -->
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
 
