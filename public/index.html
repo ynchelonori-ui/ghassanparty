@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>Watch Together</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="top">
+        <input id="roomInput" placeholder="Room ID">
+        <button onclick="joinRoom()">دخول</button>
+        <button onclick="startScreen()">مشاركة شاشة</button>
+    </div>
+
+    <div class="main">
+
+        <!-- فيديو -->
+        <video id="video" controls></video>
+
+        <!-- الشات -->
+        <div class="chat">
+            <div id="messages"></div>
+            <input id="msgInput" placeholder="اكتب رسالة...">
+            <button onclick="sendMsg()">إرسال</button>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+body {
+    margin: 0;
+    background: #0f172a;
+    color: white;
+    font-family: Arial;
+}
+
+.container {
+    padding: 10px;
+}
+
+.top {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.main {
+    display: flex;
+    gap: 10px;
+}
+
+video {
+    width: 70%;
+    background: black;
+    border-radius: 10px;
+}
+
+.chat {
+    width: 30%;
+    background: #1e293b;
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+#messages {
+    flex: 1;
+    overflow-y: auto;
+}
+
+input {
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+}
+
+button {
+    padding: 8px;
+    background: #3b82f6;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
