@@ -1,108 +1,105 @@
 const socket = io();
 
-let roomId;
+let roomId = "";
 let peer;
+let localStream;
 
+// عناصر الصفحة
+const joinBtn = document.getElementById("joinBtn");
+const roomInput = document.getElementById("roomInput");
+const screenBtn = document.getElementById("screenBtn");
+const localVideo = document.getElementById("localVideo");
 const remoteVideo = document.getElementById("remoteVideo");
-const status = document.getElementById("status");
-
-// اتصال
-socket.on("connect", () => {
-  console.log("✅ connected");
-});
 
 // دخول غرفة
-function joinRoom() {
-  roomId = document.getElementById("roomInput").value;
+joinBtn.onclick = () => {
+    roomId = roomInput.value;
+    if (!roomId) return alert("اكتب اسم الغرفة");
 
-  if (!roomId) {
-    alert("اكتب اسم غرفة");
-    return;
-  }
+    socket.emit("join", roomId);
+    console.log("Joined room:", roomId);
+};
 
-  socket.emit("join", roomId);
-  status.innerText = "✅ Joined room: " + roomId;
-
-  initWebRTC();
-}
-
-// WebRTC
-function initWebRTC() {
-  peer = new RTCPeerConnection({
-    iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
-  });
-
-  peer.onicecandidate = (event) => {
-    if (event.candidate) {
-      socket.emit("ice", { roomId, candidate: event.candidate });
-    }
-  };
-
-  peer.ontrack = (event) => {
-    console.log("📺 stream received");
-
-    remoteVideo.srcObject = event.streams[0];
-
-    remoteVideo.muted = true;
-    remoteVideo.play().catch(err => {
-      console.log("Autoplay blocked:", err);
+// إعداد WebRTC
+function createPeer() {
+    peer = new RTCPeerConnection({
+        iceServers: [
+            { urls: "stun:stun.l.google.com:19302" }
+        ]
     });
-  };
+
+    // استقبال فيديو الطرف الثاني
+    peer.ontrack = (event) => {
+        console.log("📺 Received stream");
+        remoteVideo.srcObject = event.streams[0]; // ⭐ أهم سطر
+    };
+
+    // إرسال ICE
+    peer.onicecandidate = (event) => {
+        if (event.candidate) {
+            socket.emit("ice", {
+                roomId,
+                candidate: event.candidate
+            });
+        }
+    };
 }
 
-// 💬 chat
-function sendMessage() {
-  const msg = document.getElementById("msg").value;
-  if (!msg) return;
+// تشغيل الشير سكرين
+screenBtn.onclick = async () => {
+    try {
+        localStream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: true
+        });
 
-  socket.emit("chat", { roomId, message: msg });
-}
+        localVideo.srcObject = localStream;
 
-socket.on("chat", (msg) => {
-  const li = document.createElement("li");
-  li.innerText = msg;
-  document.getElementById("chat").appendChild(li);
-});
+        createPeer();
 
-// 🔥 مشاركة الشاشة
-async function startScreenShare() {
-  if (!peer) initWebRTC();
+        // إرسال الفيديو
+        localStream.getTracks().forEach(track => {
+            peer.addTrack(track, localStream);
+        });
 
-  const stream = await navigator.mediaDevices.getDisplayMedia({
-    video: true,
-    audio: true
-  });
+        const offer = await peer.createOffer();
+        await peer.setLocalDescription(offer);
 
-  stream.getTracks().forEach(track => {
-    peer.addTrack(track, stream);
-  });
+        socket.emit("offer", {
+            roomId,
+            offer
+        });
 
-  const offer = await peer.createOffer();
-  await peer.setLocalDescription(offer);
-
-  socket.emit("offer", { roomId, offer });
-}
+    } catch (err) {
+        console.error("Screen share error:", err);
+    }
+};
 
 // استقبال offer
 socket.on("offer", async ({ offer }) => {
-  if (!peer) initWebRTC();
+    createPeer();
 
-  await peer.setRemoteDescription(offer);
+    await peer.setRemoteDescription(new RTCSessionDescription(offer));
 
-  const answer = await peer.createAnswer();
-  await peer.setLocalDescription(answer);
+    const answer = await peer.createAnswer();
+    await peer.setLocalDescription(answer);
 
-  socket.emit("answer", { roomId, answer });
+    socket.emit("answer", {
+        roomId,
+        answer
+    });
 });
 
 // استقبال answer
 socket.on("answer", async ({ answer }) => {
-  await peer.setRemoteDescription(answer);
+    await peer.setRemoteDescription(new RTCSessionDescription(answer));
 });
 
-// ICE
+// استقبال ICE
 socket.on("ice", async ({ candidate }) => {
-  if (candidate) {
-    await peer.addIceCandidate(candidate);
-  }
+    try {
+        await peer.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (e) {
+        console.error("ICE error:", e);
+    }
 });
