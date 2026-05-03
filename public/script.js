@@ -5,13 +5,29 @@ let peer;
 
 const video = document.getElementById("video");
 const remoteVideo = document.getElementById("remoteVideo");
+const status = document.getElementById("status");
 
+// اتصال
+socket.on("connect", () => {
+  console.log("✅ connected");
+});
+
+// دخول غرفة
 function joinRoom() {
   roomId = document.getElementById("roomInput").value;
+
+  if (!roomId) {
+    alert("اكتب اسم غرفة");
+    return;
+  }
+
   socket.emit("join", roomId);
+  status.innerText = "✅ Joined room: " + roomId;
+
   initWebRTC();
 }
 
+// WebRTC setup
 function initWebRTC() {
   peer = new RTCPeerConnection({
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
@@ -24,6 +40,7 @@ function initWebRTC() {
   };
 
   peer.ontrack = (event) => {
+    console.log("📺 stream received");
     remoteVideo.srcObject = event.streams[0];
   };
 }
@@ -42,21 +59,21 @@ socket.on("seek", (time) => {
 // 💬 chat
 function sendMessage() {
   const msg = document.getElementById("msg").value;
-  socket.emit("chat", { roomId, message: msg });
+  if (!msg) return;
 
-  const li = document.createElement("li");
-  li.innerText = "Me: " + msg;
-  document.getElementById("chat").appendChild(li);
+  socket.emit("chat", { roomId, message: msg });
 }
 
 socket.on("chat", (msg) => {
   const li = document.createElement("li");
-  li.innerText = "User: " + msg;
+  li.innerText = msg;
   document.getElementById("chat").appendChild(li);
 });
 
 // 🔥 مشاركة الشاشة
 async function startScreenShare() {
+  if (!peer) initWebRTC();
+
   const stream = await navigator.mediaDevices.getDisplayMedia({
     video: true,
     audio: true
