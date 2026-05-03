@@ -1,81 +1,101 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// ربط مجلد public
-app.use(express.static(path.join(__dirname, "public")));
+// يخلي الموقع يقرأ ملفات public
+app.use(express.static("public"));
 
+// تخزين الغرف
 let rooms = {};
 
 io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
+  console.log("User connected:", socket.id);
 
-    // دخول غرفة
-    socket.on("join", (roomId) => {
-        socket.join(roomId);
+  // دخول غرفة
+  socket.on("join", (roomId) => {
+    socket.join(roomId);
 
-        if (!rooms[roomId]) {
-            rooms[roomId] = {
-                time: 0,
-                playing: false
-            };
-        }
+    if (!rooms[roomId]) {
+      rooms[roomId] = {
+        time: 0,
+        playing: false
+      };
+    }
 
-        socket.emit("sync", rooms[roomId]);
-        console.log(`User joined room: ${roomId}`);
+    // ارسال حالة الفيديو الحالية
+    socket.emit("sync", rooms[roomId]);
+
+    // إشعار باقي الأشخاص
+    socket.to(roomId).emit("user-joined", socket.id);
+  });
+
+  // تشغيل الفيديو
+  socket.on("play", (roomId) => {
+    if (rooms[roomId]) {
+      rooms[roomId].playing = true;
+      socket.to(roomId).emit("play");
+    }
+  });
+
+  // إيقاف الفيديو
+  socket.on("pause", (roomId) => {
+    if (rooms[roomId]) {
+      rooms[roomId].playing = false;
+      socket.to(roomId).emit("pause");
+    }
+  });
+
+  // تغيير الوقت
+  socket.on("seek", ({ roomId, time }) => {
+    if (rooms[roomId]) {
+      rooms[roomId].time = time;
+      socket.to(roomId).emit("seek", time);
+    }
+  });
+
+  // 💬 الشات
+  socket.on("chat", ({ roomId, message }) => {
+    io.to(roomId).emit("chat", {
+      id: socket.id,
+      message
     });
+  });
 
-    // تشغيل فيديو
-    socket.on("play", (roomId) => {
-        if (!rooms[roomId]) return;
-        rooms[roomId].playing = true;
-        socket.to(roomId).emit("play");
+  // 📺 WebRTC (Screen Share إشارات فقط)
+  socket.on("offer", ({ roomId, offer }) => {
+    socket.to(roomId).emit("offer", {
+      offer,
+      from: socket.id
     });
+  });
 
-    // إيقاف فيديو
-    socket.on("pause", (roomId) => {
-        if (!rooms[roomId]) return;
-        rooms[roomId].playing = false;
-        socket.to(roomId).emit("pause");
+  socket.on("answer", ({ roomId, answer }) => {
+    socket.to(roomId).emit("answer", {
+      answer,
+      from: socket.id
     });
+  });
 
-    // مزامنة الوقت
-    socket.on("seek", ({ roomId, time }) => {
-        if (!rooms[roomId]) return;
-        rooms[roomId].time = time;
-        socket.to(roomId).emit("seek", time);
+  socket.on("ice-candidate", ({ roomId, candidate }) => {
+    socket.to(roomId).emit("ice-candidate", {
+      candidate,
+      from: socket.id
     });
+  });
 
-    // 💬 الشات
-    socket.on("chat", ({ roomId, message }) => {
-        socket.to(roomId).emit("chat", message);
-    });
-
-    // 🔥 WebRTC (مشاركة الشاشة)
-    socket.on("offer", ({ roomId, offer }) => {
-        socket.to(roomId).emit("offer", { offer });
-    });
-
-    socket.on("answer", ({ roomId, answer }) => {
-        socket.to(roomId).emit("answer", { answer });
-    });
-
-    socket.on("ice", ({ roomId, candidate }) => {
-        socket.to(roomId).emit("ice", { candidate });
-    });
-
-    // خروج المستخدم
-    socket.on("disconnect", () => {
-        console.log("User disconnected:", socket.id);
-    });
+  // خروج
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
 });
 
-// تشغيل السيرفر
-server.listen(3000, () => {
-    console.log("🚀 Server running on http://localhost:3000");
+// 🔥 هذا أهم سطر لـ Render
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, () => {
+  console.log("Server running on port " + PORT);
 });
