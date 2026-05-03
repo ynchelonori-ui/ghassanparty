@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>Watch Party</title>
+
   <style>
     body {
       background: #111;
@@ -9,15 +11,22 @@
       text-align: center;
       font-family: Arial;
     }
+
     input, button {
       padding: 10px;
       margin: 5px;
+      font-size: 16px;
     }
+
     video {
       width: 300px;
       margin: 10px;
       border-radius: 10px;
       background: black;
+    }
+
+    button {
+      cursor: pointer;
     }
   </style>
 </head>
@@ -25,11 +34,13 @@
 
 <h1>🎬 Watch Party</h1>
 
+<!-- دخول الغرفة -->
 <input id="roomInput" placeholder="Room ID">
-<button id="joinBtn">Join</button>
+<button onclick="joinRoom()">Join Room</button>
 
 <hr>
 
+<!-- مشاركة الشاشة -->
 <h3>📺 Screen Share</h3>
 
 <p>🟢 Your Screen</p>
@@ -43,6 +54,7 @@
 
 <hr>
 
+<!-- الشات -->
 <h3>💬 Chat</h3>
 
 <input id="msgInput" placeholder="Type message">
@@ -50,6 +62,7 @@
 
 <ul id="chatBox"></ul>
 
+<!-- مهم جدًا -->
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
 
